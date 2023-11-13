@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF File Manipulation</title>
+</head>
+<body>
+
+<input type="file" id="pdfInput" accept=".pdf">
+<button onclick="processPdf()">Process PDF</button>
+
+<script>
+async function rotatePdf(inputFile) {
+  const pdfBuffer = await inputFile.arrayBuffer();
+  const pdfDoc = await PDFLib.PDFDocument.load(pdfBuffer);
+  const pages = pdfDoc.getPages();
+
+  for (const page of pages) {
+    const { width, height } = page.getSize();
+    page.setRotation(180);
+    page.setSize([width, height]);
+  }
+
+  return pdfDoc;
+}
+
+function downloadPdf(pdfDoc, fileName) {
+  const pdfBytes = pdfDoc.save();
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  a.click();
+}
+
+async function processPdf() {
+  const inputElement = document.getElementById('pdfInput');
+  const file = inputElement.files[0];
+
+  if (file) {
+    try {
+      const rotatedPdf = await rotatePdf(file);
+      downloadPdf(rotatedPdf, 'output.pdf');
+    } catch (error) {
+      console.error('Error processing PDF:', error);
+    }
+  } else {
+    console.error('No file selected.');
+  }
+}
+</script>
+
+<script src="https://cdn.skypack.dev/@pdf-lib/core"></script>
+
+</body>
+</html>
